@@ -3,6 +3,7 @@ import "@fontsource/nunito/latin-400.css";
 import "@fontsource/nunito/latin-700.css";
 import "@fontsource/nunito/latin-900.css";
 import "./globals.css";
+import "./maker-world.css";
 
 export const metadata: Metadata = {
   title: "Moremi — Maker Club",

@@ -6,13 +6,15 @@ import {CloudRain,Sun,Wind,Check,Sparkles} from 'lucide-react';
 import type {Project} from '@/lib/moremi/model';
 import {appTotal} from '@/lib/moremi/model';
 import {weatherOutput,weatherInputs,weatherLabels,type Weather,type Gear} from '@/lib/moremi/weather';
+import {CounterPad} from "./counter-pad";
+import {pressButton} from "@/lib/moremi/counter-toy";
 import {stallEvent} from '@/lib/moremi/stall';
 import type {Cue} from '@/lib/moremi/audio';
 export type Sound=(cue?:Cue|boolean)=>void;
 const asset=(name:string)=>`/art/play/${name}.webp`;
 export function ToyArt({name,className='',alt=''}:{name:string;className?:string;alt?:string}){return <img src={asset(name)} alt={alt} className={`toy-art ${className}`} draggable={false}/>;}
 export function WeatherGlyph({weather}:{weather:Weather}){return weather==='sunny'?<Sun/>:weather==='rainy'?<CloudRain/>:<Wind/>;}
-export function SheepSprite({className='',excited=false}:{className?:string;excited?:boolean}){return <ToyArt name="cloud-sheep" alt="Cloud Sheep" className={`sheep-sprite ${excited?'toy-celebrate':''} ${className}`}/>;}
+export function SheepSprite({className='',excited=false}:{className?:string;excited?:boolean}){return <img src="/art/world/sheep.webp" alt="Cloud Sheep" draggable={false} className={`sheep-sprite ${excited?'toy-celebrate':''} ${className}`}/>;}
 const DragContext=createContext<{selected:string|null;select:(s:string|null)=>void;drop:(target:string,payload:string)=>void;root:React.RefObject<HTMLDivElement|null>}>({selected:null,select:()=>{},drop:()=>{},root:{current:null}});
 export function DragBoard({onDrop,children,className=''}:{onDrop:(target:string,payload:string)=>void;children:ReactNode;className?:string}){
  const [selected,select]=useState<string|null>(null);const root=useRef<HTMLDivElement>(null);
@@ -56,6 +58,7 @@ export function FreePlay({project:p,reduced,sound}:{project:Project;reduced:bool
   else if(p.kind==='stall'&&(target==='basket'||target==='friend')&&payload==='fruit'){const s=stallEvent(p,stock,'sell');setStock(s.stock);setCount(n=>n+Number(!s.blocked));setHappy(!s.blocked);setMessage(s.blocked?'Time for more fruit!':'Yum! Another happy customer.');sound(s.blocked?'retry':'success');}
   else if(p.kind==='stall'&&target==='basket'&&payload==='crate'){setStock(stallEvent(p,stock,'restock').stock);setMessage('Fresh fruit!');sound();}
  };
+ if(p.kind==='counter')return <div className="mw-free-play"><div className="mw-free-actor"><img src="/art/world/blob.webp" alt="Blob"/></div><CounterPad project={p} count={count} onPress={()=>{setCount(n=>pressButton(p,n));setHappy(false);sound();}} onClear={()=>{setCount(0);sound();}} reduced={reduced}/><button className="mw-button mw-yellow" onClick={()=>{setCount(0);setHappy(true);setMessage('Yum yum! One more?');sound('success');}}><span>Serve!</span></button><p role="status">{message}</p></div>;
  return <DragBoard onDrop={drop} className="free-play"><ToyScene project={p} count={count} stock={stock} weather={weather} gear={gear} onWeather={w=>{setWeather(w);setGear(null);sound();}} onRemove={()=>setCount(n=>Math.max(0,n-1))} happy={happy} reduced={reduced} free/>
- <div className="toy-dock">{p.kind==='counter'?<><DragToy payload="snack" label="Pick up a puff-puff"><ToyArt name="puff-puff"/></DragToy><button className="clay-button tone-yellow" onClick={()=>{setCount(0);setHappy(true);setMessage('Yum yum! One more?');sound('success');}}>Serve!</button></>:p.kind==='stall'?<DragToy payload="crate" label="Pick up refill crate"><ToyArt name="mango"/><span>+{p.restockAmount}</span></DragToy>:<DragToy payload={`gear:${weatherOutput(p,weather)}`} label={`Pick up ${weatherOutput(p,weather)}`}><ToyArt name={weatherOutput(p,weather)}/></DragToy>}<button className="plain-link" onClick={()=>{setCount(0);setStock(p.stockStart);setGear(null);setHappy(false);setMessage('Let’s play again!');}}>Reset</button></div><p className="play-caption" role="status">{message}</p></DragBoard>;
+ <div className="toy-dock">{p.kind==='stall'?<DragToy payload="crate" label="Pick up refill crate"><ToyArt name="mango"/><span>+{p.restockAmount}</span></DragToy>:<DragToy payload={`gear:${weatherOutput(p,weather)}`} label={`Pick up ${weatherOutput(p,weather)}`}><ToyArt name={weatherOutput(p,weather)}/></DragToy>}<button className="plain-link" onClick={()=>{setCount(0);setStock(p.stockStart);setGear(null);setHappy(false);setMessage('Let’s play again!');}}>Reset</button></div><p className="play-caption" role="status">{message}</p></DragBoard>;
 }

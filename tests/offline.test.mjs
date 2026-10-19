@@ -23,7 +23,8 @@ function runtime({badFile,offline=false}={}){
 }
 test("pack includes actual artwork, entrypoint, chunks and font files",()=>{
   assert(manifest.files.some(file=>file.url==="/"));assert(manifest.files.some(file=>file.url.includes("moremi-poses.webp")));assert(manifest.files.some(file=>file.url.endsWith(".js")));assert(manifest.files.some(file=>file.url.endsWith(".woff2")));
-  assert(manifest.totalBytes<8_000_000);for(const track of ["sunny-orchard","rising-wonder","moremi-celebration"])assert(manifest.files.some(file=>file.url===`/audio/${track}.m4a`));assert.equal(new Set(manifest.files.map(file=>file.url)).size,manifest.files.length);assert.equal(manifest.files.filter(file=>file.url.endsWith(".mp4")).length,10);assert(!manifest.files.some(file=>file.url.includes(".vite")||file.url.includes(".assetsignore")));
+  for(const asset of ["map","welcome","stall","moremi","blob","sheep"])assert(manifest.files.some(file=>file.url===`/art/world/${asset}.webp`));
+  assert(manifest.totalBytes<9_000_000);for(const track of ["sunny-orchard","rising-wonder","moremi-celebration"])assert(manifest.files.some(file=>file.url===`/audio/${track}.m4a`));assert.equal(new Set(manifest.files.map(file=>file.url)).size,manifest.files.length);assert.equal(manifest.files.filter(file=>file.url.endsWith(".mp4")).length,10);assert(!manifest.files.some(file=>file.url.includes(".vite")||file.url.includes(".assetsignore")));
 });
 test("ready means every required file is present and its digest matches",async()=>{
   const r=runtime();assert.equal((await r.verify()).ready,false);await r.trigger("install");await r.trigger("activate");assert.equal((await r.verify()).ready,true);

@@ -4,7 +4,7 @@ import { activeBuilder, appTotal, calculate, casePassed, changePrice, changeRule
 import { moveStage } from "../lib/moremi/mission-machine.ts";
 
 const storage = () => { const records = new Map(); return { getItem:key=>records.get(key)??null, setItem:(key,value)=>records.set(key,value) }; };
-function tested(source) { let p=changeRule(changePrice(createProject("puff-puff",source),source?source.unitPrice+25:125),"multiply"); p={...p,prediction:p.unitPrice*2,predictionChecked:true,stage:"test"}; p=runCase(runCase(runCase(p,"two"),"zero"),"five"); return {...p,stage:"handoff"}; }
+function tested(source) { let p=changeRule(changePrice(createProject("puff-puff",source),source?source.unitPrice+25:125),"multiply"); p={...p,buttonPlaced:true,buttonConnected:true,prediction:p.unitPrice*2,predictionChecked:true,stage:"test"}; p=runCase(runCase(runCase(p,"two"),"zero"),"five"); return {...p,stage:"handoff"}; }
 function withDraft(d,p) { return updateBuilder(d,b=>({...b,draft:p})); }
 
 test("calculator handles ordinary and empty orders; rejects invalid input",()=>{
