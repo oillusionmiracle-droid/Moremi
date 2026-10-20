@@ -34,7 +34,7 @@ export function stallCasePassed(p:Project,id:StallCase){
 export function stallPredictionCorrect(p:Project){return p.stockPredictionChecked&&p.stockPrediction===p.stockStart-1;}
 export function stallEligible(p:Project,b:Builder){
   const base=p.sourceId?b.projects.find(x=>x.id===p.sourceId)?.stockStart??3:3;
-  return p.stockStart!==base&&p.sellRule==="remove-one"&&p.restockAmount===2&&stallPredictionCorrect(p)&&stallCases.every(t=>stallCasePassed(p,t.id));
+  return p.stockDisplayPlaced&&p.stockStart!==base&&p.sellRule==="remove-one"&&p.restockAmount===2&&stallPredictionCorrect(p)&&stallCases.every(t=>stallCasePassed(p,t.id));
 }
 type Rules=Pick<Project,"stockStart"|"sellRule"|"restockAmount">;
 function invalidate(p:Project,next:Rules,history=p.stockHistory):Project{return{...p,...next,revision:p.revision+1,stockTests:[],stockPrediction:null,stockPredictionChecked:false,stockHistory:history,updatedAt:new Date().toISOString()};}

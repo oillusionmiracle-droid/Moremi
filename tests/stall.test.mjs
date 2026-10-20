@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { activeBuilder, createProject, createStallProject, eligible, finishProject, initialDatabase, parseBackup, storeDatabase, updateBuilder, xp } from '../lib/moremi/model.ts';
 import { changeStall, runStallCase, stallCasePassed, stallCases, stallEvent, traceStall, undoStall } from '../lib/moremi/stall.ts';
 const withDraft=(d,p)=>updateBuilder(d,b=>({...b,draft:p}));
-function complete(source){let p=changeStall(createStallProject(source),{stockStart:source?source.stockStart+1:4,sellRule:'remove-one',restockAmount:2});p={...p,stockPrediction:p.stockStart-1,stockPredictionChecked:true,stage:'handoff'};return stallCases.reduce((p,t)=>runStallCase(p,t.id),p);}
+function complete(source){let p=changeStall(createStallProject(source),{stockStart:source?source.stockStart+1:4,sellRule:'remove-one',restockAmount:2});p={...p,stockDisplayPlaced:true,stockPrediction:p.stockStart-1,stockPredictionChecked:true,stage:'handoff'};return stallCases.reduce((p,t)=>runStallCase(p,t.id),p);}
 test('stall events remember successive changes, block empty sales and refill',()=>{
  const p=complete();let stock=4;stock=stallEvent(p,stock,'sell').stock;assert.equal(stock,3);stock=stallEvent(p,stock,'sell').stock;assert.equal(stock,2);assert.equal(stallEvent(p,stock,'restock').stock,4);
  assert.deepEqual(stallEvent(p,0,'sell'),{before:0,stock:0,blocked:true,event:'sell'});assert.equal(stallEvent(p,0,'restock').stock,2);
@@ -23,7 +23,7 @@ test('edits and undo clear old predictions and evidence',()=>{
 });
 test('stall completion requires personalized stock, a correct prediction and latest tests',()=>{
  const d=initialDatabase(),p=complete();assert(eligible(p,activeBuilder(d)));
- for(const invalid of [{...p,stockPrediction:5},{...p,stockPredictionChecked:false},{...p,stockStart:3},{...p,sellRule:'add-one'},{...p,stockTests:p.stockTests.slice(0,2)},{...p,stockTests:p.stockTests.map(t=>({...t,revision:0}))}])assert.throws(()=>finishProject(withDraft(d,invalid)));
+ for(const invalid of [{...p,stockDisplayPlaced:false},{...p,stockPrediction:5},{...p,stockPredictionChecked:false},{...p,stockStart:3},{...p,sellRule:'add-one'},{...p,stockTests:p.stockTests.slice(0,2)},{...p,stockTests:p.stockTests.map(t=>({...t,revision:0}))}])assert.throws(()=>finishProject(withDraft(d,invalid)));
  assert.throws(()=>finishProject(withDraft(d,{...p,stage:'edit'})));
 });
 test('stall saves and remixes earn their own deduplicated rewards without changing originals',()=>{
@@ -51,4 +51,8 @@ test('adventure switching preserves both edited drafts and upgrades old backups'
  d=parseBackup(JSON.parse(JSON.stringify(d)));d=activateProject(d,'stall');assert.equal(activeBuilder(d).draft.id,stallId);assert.equal(activeBuilder(d).draft.stockStart,6);assert.strictEqual(activateProject(d,'stall'),d);
  const legacy=JSON.parse(JSON.stringify(initialDatabase()));delete legacy.builders[0].pausedDrafts;assert.deepEqual(parseBackup(legacy).builders[0].pausedDrafts,[]);
  const duplicate=JSON.parse(JSON.stringify(d));duplicate.builders[0].pausedDrafts.push(duplicate.builders[0].draft);assert.throws(()=>parseBackup(duplicate));
+});
+
+test('new fruit apps need a display, while older backups retain their working shelf',()=>{
+ const fresh=createStallProject();assert.equal(fresh.stockDisplayPlaced,false);const d=initialDatabase();d.builders[0].draft=fresh;delete d.builders[0].draft.stockDisplayPlaced;assert.equal(parseBackup(d).builders[0].draft.stockDisplayPlaced,true);const completed=finishProject(withDraft(initialDatabase(),complete()));delete completed.builders[0].projects[0].stockDisplayPlaced;const restored=parseBackup(completed);assert.equal(xp(restored.builders[0]),50);assert.equal(restored.builders[0].projects[0].stockDisplayPlaced,true);
 });

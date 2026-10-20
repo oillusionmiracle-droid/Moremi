@@ -6,6 +6,7 @@ import {CloudRain,Sun,Wind,Check,Sparkles} from 'lucide-react';
 import type {Project} from '@/lib/moremi/model';
 import {appTotal} from '@/lib/moremi/model';
 import {weatherOutput,weatherInputs,weatherLabels,type Weather,type Gear} from '@/lib/moremi/weather';
+import {StockPad} from "./stock-pad";
 import {CounterPad} from "./counter-pad";
 import {pressButton} from "@/lib/moremi/counter-toy";
 import {stallEvent} from '@/lib/moremi/stall';
@@ -59,6 +60,7 @@ export function FreePlay({project:p,reduced,sound}:{project:Project;reduced:bool
   else if(p.kind==='stall'&&target==='basket'&&payload==='crate'){setStock(stallEvent(p,stock,'restock').stock);setMessage('Fresh fruit!');sound();}
  };
  if(p.kind==='counter')return <div className="mw-free-play"><div className="mw-free-actor"><img src="/art/world/blob.webp" alt="Blob"/></div><CounterPad project={p} count={count} onPress={()=>{setCount(n=>pressButton(p,n));setHappy(false);sound();}} onClear={()=>{setCount(0);sound();}} reduced={reduced}/><button className="mw-button mw-yellow" onClick={()=>{setCount(0);setHappy(true);setMessage('Yum yum! One more?');sound('success');}}><span>Serve!</span></button><p role="status">{message}</p></div>;
+ if(p.kind==='stall')return <div className="mw-free-play mw-saved-fruit"><div className="mw-free-actor"><img src="/art/mushroom-cutout.webp" alt="Mushroom"/></div><StockPad project={p} stock={stock} onSell={()=>{const next=stallEvent(p,stock,'sell');setStock(next.stock);setCount(n=>n+Number(!next.blocked));setMessage(next.blocked?'All gone! Tap REFILL for a delivery.':'One sold. Your app remembered!');sound(next.blocked?'retry':'success');}} onRefill={()=>{setStock(stallEvent(p,stock,'restock').stock);setMessage('Fresh fruit! Ready for another friend.');sound('success');}} reduced={reduced} delivered={count}/><button className="mw-text-link" onClick={()=>{setStock(p.stockStart);setCount(0);setMessage('Ready for the morning rush!');}}>Start a fresh day</button><p role="status">{message}</p></div>;
  return <DragBoard onDrop={drop} className="free-play"><ToyScene project={p} count={count} stock={stock} weather={weather} gear={gear} onWeather={w=>{setWeather(w);setGear(null);sound();}} onRemove={()=>setCount(n=>Math.max(0,n-1))} happy={happy} reduced={reduced} free/>
- <div className="toy-dock">{p.kind==='stall'?<DragToy payload="crate" label="Pick up refill crate"><ToyArt name="mango"/><span>+{p.restockAmount}</span></DragToy>:<DragToy payload={`gear:${weatherOutput(p,weather)}`} label={`Pick up ${weatherOutput(p,weather)}`}><ToyArt name={weatherOutput(p,weather)}/></DragToy>}<button className="plain-link" onClick={()=>{setCount(0);setStock(p.stockStart);setGear(null);setHappy(false);setMessage('Let’s play again!');}}>Reset</button></div><p className="play-caption" role="status">{message}</p></DragBoard>;
+ <div className="toy-dock">{<DragToy payload={`gear:${weatherOutput(p,weather)}`} label={`Pick up ${weatherOutput(p,weather)}`}><ToyArt name={weatherOutput(p,weather)}/></DragToy>}<button className="plain-link" onClick={()=>{setCount(0);setStock(p.stockStart);setGear(null);setHappy(false);setMessage('Let’s play again!');}}>Reset</button></div><p className="play-caption" role="status">{message}</p></DragBoard>;
 }
