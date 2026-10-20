@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm exec tsc --noEmit && pnpm build && node --import ./tests/tsx-loader.mjs --test tests/*.test.mjs",
   "outputDirectory": "dist/client",
   "headers": [
     {
